@@ -1,7 +1,8 @@
+// https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
 use git2::{Repository, Tree, Commit};
 use std::fs;
 use std::path::Path;
-use std::str::FromStr;
+use std::str::{FromStr, from_utf8};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -39,7 +40,7 @@ fn _expand_tree(repo: &Repository, tree: &git2::Tree) {
         match entry.kind() {
             Some(git2::ObjectType::Blob) => {
                 let blob = repo.find_blob(entry.id()).unwrap();
-                println!("{:?}", blob.size());
+                println!("{:?}, {:?}", from_utf8(blob.content()).expect("Failed unwrapping the string!").len(), entry.name().unwrap());
             }
             Some(git2::ObjectType::Tree) => {
                 let subtree = repo.find_tree(entry.id()).unwrap();
@@ -57,13 +58,9 @@ fn commit(repository: &Repository) -> Result<Commit, git2::Error> {
 fn main() {
     let repository = repository("https://github.com/kachayev/fn.py").expect("Couldn't open repository!");
     let _main_tree = repository.head().unwrap().peel_to_tree().unwrap();
-    // _expand_tree(&repository, &main_tree);
+    _expand_tree(&repository, &_main_tree);
 
     let mut commit = commit(&repository).unwrap();
-    
-    // commit.parents().for_each(|parent| {
-    //     println!("Parent: {}", parent.summary().unwrap());
-    // });
 
     // Walk through the commit history and print the commit messages and trees
     loop {
