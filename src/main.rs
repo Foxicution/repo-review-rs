@@ -56,6 +56,7 @@ fn commit(repository: &Repository) -> Result<Commit, git2::Error> {
 }
 
 fn main() {
+    // To get the diff between two trees one can look at blob pointers
     let repository = repository("https://github.com/kachayev/fn.py").expect("Couldn't open repository!");
     let _main_tree = repository.head().unwrap().peel_to_tree().unwrap();
     _expand_tree(&repository, &_main_tree);
@@ -69,6 +70,8 @@ fn main() {
         // Get the tree for the commit
         let tree = commit.tree().expect("Couldn't get tree for commit!");
         println!("Tree: {}", tree.id());
+        let diff = repository.diff_tree_to_tree(Some(&_main_tree), Some(&tree), None).unwrap();
+        println!("Diff: {}", diff.deltas().len());
 
         // Get the parent of the current commit
         let parent = match commit.parents().last() {
