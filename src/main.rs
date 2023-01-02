@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::str::{FromStr, from_utf8};
 use serde::Deserialize;
+use git2::DiffFormat::NameOnly;
 
 #[derive(Deserialize)]
 struct File {
@@ -71,7 +72,11 @@ fn main() {
         let tree = commit.tree().expect("Couldn't get tree for commit!");
         println!("Tree: {}", tree.id());
         let diff = repository.diff_tree_to_tree(Some(&_main_tree), Some(&tree), None).unwrap();
-        println!("Diff: {}", diff.deltas().len());
+        println!("Diff: {}", diff.stats().unwrap().deletions());
+        diff.print(NameOnly, |delta, _, _| {
+            println!("Delta: {:?}", delta);
+            true
+        }).unwrap();
 
         // Get the parent of the current commit
         let parent = match commit.parents().last() {
